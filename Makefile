@@ -7,6 +7,8 @@ EXTRA_CFLAGS += -O1
 #EXTRA_CFLAGS += -pedantic
 #EXTRA_CFLAGS += -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
 
+NCPU := $(shell nproc)
+
 EXTRA_CFLAGS += -Wno-unused-variable
 EXTRA_CFLAGS += -Wno-unused-value
 EXTRA_CFLAGS += -Wno-unused-label
@@ -101,7 +103,7 @@ CONFIG_RTW_SDIO_PM_KEEP_POWER = y
 ###################### MP HW TX MODE FOR VHT #######################
 CONFIG_MP_VHT_HW_TX_MODE = y
 ###################### Platform Related #######################
-CONFIG_PLATFORM_I386_PC = y
+CONFIG_PLATFORM_I386_PC = n
 CONFIG_PLATFORM_ARM_RPI = n
 CONFIG_PLATFORM_ARM64_RPI = n
 CONFIG_PLATFORM_ANDROID_X86 = n
@@ -163,6 +165,7 @@ CONFIG_PLATFORM_NV_TK1_UBUNTU = n
 CONFIG_PLATFORM_RTL8197D = n
 CONFIG_PLATFORM_AML_S905 = n
 CONFIG_PLATFORM_ZTE_ZX296716 = n
+CONFIG_PLATFORM_BAIKAL_M = y
 ###############################################################
 
 CONFIG_DRVEXT_MODULE = n
@@ -2069,6 +2072,26 @@ endif
 
 endif
 
+ifeq ($(CONFIG_PLATFORM_BAIKAL_M), y)
+#EXTRA_CFLAGS += -DCONFIG_PLATFORM_AML_S905
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+# default setting for Android
+# EXTRA_CFLAGS += -DCONFIG_CONCURRENT_MODE
+EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211
+EXTRA_CFLAGS += -DRTW_USE_CFG80211_STA_EVENT
+# default setting for Android 5.x and later
+#EXTRA_CFLAGS += -DCONFIG_RADIO_WORK
+
+ARCH ?= arm64
+CROSS_COMPILE ?= $(HOME)/toolchains/aarch64-unknown-linux-gnueabi/bin/aarch64-unknown-linux-gnueabi-
+ifndef KSRC
+KSRC := $(HOME)/gitlab/baikal-m/kernel/
+# To locate output files in a separate directory.
+KSRC += O=$(HOME)/gitlab/baikal-m/kernel/KERNEL_OBJ
+endif
+
+endif
+
 ifeq ($(CONFIG_PLATFORM_ZTE_ZX296716), y)
 EXTRA_CFLAGS += -Wno-error=date-time
 EXTRA_CFLAGS += -DCONFIG_PLATFORM_ZTE_ZX296716
@@ -2210,8 +2233,11 @@ export CONFIG_RTL8821CU = m
 
 all: modules
 
+# NDZ added lines to prep the kernel, then build the driver
 modules:
-	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC) M=$(shell pwd)  modules
+	$(MAKE) -j$(NCPU) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC) mitx_defconfig
+	$(MAKE) -j$(NCPU) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC)
+	$(MAKE) -j$(NCPU) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC) M=$(shell pwd)
 
 strip:
 	$(CROSS_COMPILE)strip $(MODULE_NAME).ko --strip-unneeded
