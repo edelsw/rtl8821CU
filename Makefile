@@ -101,7 +101,7 @@ CONFIG_AP_WOWLAN = n
 ######### Notify SDIO Host Keep Power During Syspend ##########
 CONFIG_RTW_SDIO_PM_KEEP_POWER = y
 ###################### MP HW TX MODE FOR VHT #######################
-CONFIG_MP_VHT_HW_TX_MODE = y
+CONFIG_MP_VHT_HW_TX_MODE = n
 ###################### Platform Related #######################
 CONFIG_PLATFORM_I386_PC = n
 CONFIG_PLATFORM_ARM_RPI = n
@@ -2073,21 +2073,16 @@ endif
 endif
 
 ifeq ($(CONFIG_PLATFORM_BAIKAL_M), y)
-#EXTRA_CFLAGS += -DCONFIG_PLATFORM_AML_S905
 EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
-# default setting for Android
-# EXTRA_CFLAGS += -DCONFIG_CONCURRENT_MODE
 EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211
 EXTRA_CFLAGS += -DRTW_USE_CFG80211_STA_EVENT
-# default setting for Android 5.x and later
-#EXTRA_CFLAGS += -DCONFIG_RADIO_WORK
 
 ARCH ?= arm64
-CROSS_COMPILE ?= $(HOME)/toolchains/aarch64-unknown-linux-gnueabi/bin/aarch64-unknown-linux-gnueabi-
+CROSS_COMPILE ?= $(HOME)/toolchains/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-
+KDIR ?= $(HOME)/gitlab/baikal-m/kernel
 ifndef KSRC
-KSRC := $(HOME)/gitlab/baikal-m/kernel/
-# To locate output files in a separate directory.
-KSRC += O=$(HOME)/gitlab/baikal-m/kernel/KERNEL_OBJ
+#KSRC := $(KDIR) O=$(HOME)/gitlab/baikal-m/kernel/KERNEL_OBJ
+KSRC := $(KDIR) O=build
 endif
 
 endif
@@ -2306,5 +2301,6 @@ clean:
 	rm -fr Module.symvers ; rm -fr Module.markers ; rm -fr modules.order
 	rm -fr *.mod.c *.mod *.o .*.cmd *.ko *~
 	rm -fr .tmp_versions
+	rm -rf build
 endif
 

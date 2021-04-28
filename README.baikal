@@ -1,0 +1,14 @@
+To build:
+
+make all
+
+or:
+make CROSS_COMPILE=/path/to/crosstools/aarch64-unknown-linux-gnu- KDIR=/path/po/kernel-src all
+
+Edelweiss changes to the driver:
+
+We turned off CONFIG_MP_VHT_HW_TX_MODE because it involves some floating point
+calculations which is fairly uncommon for the kernel space and requires the
+removal of -mgeneral-regs-only flag in the kernel's arch/arm64/Makefile. We
+would rather not do that. The omission of CONFIG_MP_VHT_HW_TX_MODE does not
+seem to affect the driver performance.
